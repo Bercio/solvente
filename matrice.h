@@ -9,12 +9,13 @@ struct matrice {
     rango_righe = M.size();
     rango_colonne = M[0].size();
 
-    matrice riduci(int i, int j){
-        vector<vector<C>> N = M;
-        N.erase(N.begin() + i);
-        for(auto riga:N) riga.erase(riga.begin()+j);
-        return N;
+    matrice ridotta(int i, int j){
+        matrice n = this;
+        n.M.erase(n.M.begin() + i);
+        for(auto riga:n.M) riga.erase(riga.begin()+j);
+        return n;
     }
+    
     C det();
     matrice T() {
         matrice n;
