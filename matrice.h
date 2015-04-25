@@ -61,7 +61,7 @@ struct matrice {
                 else M[n] =  (M[n] * (M[i][i]/M[n][i])) - M[i];
             }
         }
-        for(int i = rango_righe-1; i > 0; --i){
+        for(int i = rango_righe-1; i >= 0; --i){
             //double& pivot = M[i][i];
             int l = i;
             while(M[i][i] < 0.00001 && M[i][i] > -0.00001) {
