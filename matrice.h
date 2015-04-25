@@ -2,59 +2,87 @@
 #include <stdexcept>
 #include <iostream>
 #include <vector>
+#include "complessi.h"
 using namespace std;
 
+vector<double> operator/(vector<double> v, double c){
+    if (c == double(0)) throw invalid_argument("can't divide by zero");
+    vector<double> w;
+    for (double& e: v) w.push_back(e/c);
+    return w;
+}
+vector<double> operator*(vector<double> v, double c){
+    vector<double> w;
+    for (double& e: v) w.push_back(e*c);
+    return w;
+}
+vector<double> operator+(vector<double> v, vector<double> w){
+    vector<double> res;
+    for(int i = 0; i < static_cast<int>(v.size()); ++i) res.push_back(v[i]+w[i]);
+    return res;
+}
+vector<double> operator-(vector<double> v, vector<double> w){
+    vector<double> res;
+    for(int i = 0; i < static_cast<int>(v.size()); ++i) res.push_back(v[i]-w[i]);
+    return res;
+}
 struct matrice {
-    M = vector<vector<C>>;
-    rango_righe = M.size();
-    rango_colonne = M[0].size();
+    vector<vector<double>> M;
+    int rango_righe = M.size();
+    int rango_colonne = M[0].size();
 
+    matrice(vector<vector<double>> v): M(v) {}
+    matrice() = default;
     matrice ridotta(int i, int j){
-        matrice n = this;
+        matrice n = *this;
         n.M.erase(n.M.begin() + i);
-        for(auto riga:n.M) riga.erase(riga.begin()+j);
+        for(vector<double>& riga:n.M) riga.erase(riga.begin()+j);
         return n;
     }
-    
-    C det();
-    matrice T() {
-        matrice n;
-        for(int i = 0; i < rango_righe; ++i){
-            n.M.push_back(vector<C>);
-            for(auto riga:M) n.M[i].push_back(riga[i]);
-        }
-        return n;
+    void scambia(int i, int l){
+        vector<double> v = M[i];
+        M[i] = M[l];
+        M[l] = v;
     }
-    matrice operand*(matrice n){
-        if (rango_colonne != n.rango_righe || rango_righe != n.rango_colonne) 
-            throw invalid_argument("solo matrici il cui rango colonna coincide 
-            col rango riga dell'altro fattore e viceversa possono essere 
-            moltiplicate");
-        matrice res;
-        for(int j = 0; j < rango_righe; ++j){ 
-            res.push_back(vector<C>);
-            for(int i = 0; i < n.rango_colonne){
-                res[j].push_back(M[j][i]*n.M[i][j]);
+        
+    void soluta(){ 
+        /* per ogni riga i seleziono l'elemento i della riga chiamato pivot. se l'elemento e' 0 allora scambio la riga con la successiva fino a che non e' 0 altrimenti
+         * ignoro la colonna. Divido la riga i per il pivot. moltiplico poi tutte le righe successive j per -pivot/e_ji e le sostituisco alla somma tra loro e la riga i.*/
+        for(int i = 0; i < rango_righe; ++i){
+            //double& pivot = M[i][i];
+            int l = i;
+            while(M[i][i] < 0.00001 && M[i][i] > -0.00001) {
+                ++l;
+                if (l < rango_righe) scambia(i,l);
+                else throw invalid_argument("non me mette tutti i fattori == 0 dai");
+                }
+            M[i] = M[i] / M[i][i];
+            for(int n = i+1; n < rango_righe; ++n){
+                if (M[n][i] == 0) continue;
+                else M[n] =  (M[n] * (M[i][i]/M[n][i])) - M[i];
             }
         }
-        return res;
-    }
-    matrice inversa() {
-        matrice n;
-        for(int i = 0; i < rango_righe; ++i){
-            n.M.push_back(vector<C>);
-            for(int j = 0; j < rango_colonne; ++j){
-                n.M[i].push_back(pow(-1,i+j)*this->ridotta(i, j).det()/this->det());
+        for(int i = rango_righe-1; i > 0; --i){
+            //double& pivot = M[i][i];
+            int l = i;
+            while(M[i][i] < 0.00001 && M[i][i] > -0.00001) {
+                --l;
+                if (l >= 0) scambia(i,l);
+                else throw invalid_argument("non me mette tutti i fattori == 0 dai");
+                }
+            M[i] = M[i] / M[i][i];
+            cout << "il M[i][i] e' ora uguale a = " << M[i][i] << "\n" << flush;
+            for(int n = i-1; n >= 0; --n){
+                if (M[n][i] == 0) continue;
+                else M[n] =  (M[n] * (M[i][i]/M[n][i])) - M[i];
             }
         }
-        return n.T();
     }
 };
             
-    }
 ostream& operator <<(ostream& o, matrice m) {
-    for(auto riga:m.M) {
-        for(auto e:riga) cout << e << " ";
+    for(vector<double>& riga:m.M) {
+        for(double& e:riga) cout << e << " ";
         cout << "\n";
     }
     return o;
