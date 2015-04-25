@@ -18,6 +18,7 @@ struct C {
                        else 
                         throw invalid_argument(
                         "can't convert a complex number with an imaginary part to a double");}
+    bool is_zero(){ return (a < 0.0001 && a > -0.0001 && b < 0.0001 && b > -0.0001);}
 };
 
 C pow(C c, int e) {
