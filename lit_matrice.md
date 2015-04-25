@@ -31,56 +31,6 @@ struct matrice {
     rango_colonne = M[0].size();
     };
 ```
-
-## Calcolo del determinante
-
-Poichè, una volta rappresentato un sistema di equazioni come una matrice *A* 
-e i termini noti e le incognite come due vettori *b* e *x*, la soluzione del 
-sistema è data da $x = A^{-1} \cdot b$, risulta necessario creare una funzione 
-che inverta una matrice data. Per "tradurre" in C++ la formula $$A^{-1} 
-= \frac{1}{|A|} (\text{cof }A)^T$$ (dove cof *A* indica la matrice dei 
-cofattori di A) ho inanzitutto implementato la formula di Laplace per il 
-determinante: $$\det(A) = \sum_{i=1}(-1)^{i+j}a_{i,j}M_{i,j}$$ dove $M_{i,j}$ 
-indica il determinante di *A* privata della riga *i* e della colonna *j*; Per 
-implementare questa "riduzione" della matrice ho preferito creare una funzione 
-"aiutante" aggiuntiva, `ridotta`, anche in previsione della sua utilità nel 
-calcolare l'inversa.
-
-```cpp
-    matrice ridotta(int i, int j){
-        matrice n = this;
-        n.M.erase(n.M.begin() + i);
-        for(auto riga:n.M) riga.erase(riga.begin()+j);
-        return n;
-    }
-```
-
-Per calcolare il determinante di qualsiasi matrice basta dunque applicare una 
-funzione ricorsiva che riduca la matrice fino ad una matrice 1x1 e vi applichi 
-dunque le dovute moltiplicazioni e somme:
-
-```cpp
-    C det();
-```
-
-## Trasposizione della matrice
-
-Avendo la funzione per calcolare il determinante e la funzione per ridurre una 
-matrice, applicando le quali posso facilmente trovare la matrice di cofattori,
-necessito ora solamente di una funzione per calcolarne la trasposta, al fine 
-poi di trovare l'inversa.
-
-``` cpp
-    matrice T() {
-        matrice n;
-        for(int i = 0; i < rango_righe; ++i){
-            n.M.push_back(vector<C>);
-            for(auto riga:M) n.M[i].push_back(riga[i]);
-        }
-        return n;
-    }
-```
-
 ## Inversa della matrice
 
 Avendo implementato dunque tutte le funzioni che mi necessitavano, Ho infine 

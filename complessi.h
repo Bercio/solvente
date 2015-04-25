@@ -29,6 +29,6 @@ C pow(C c, int e) {
 
 ostream &operator<<(ostream &o, C c) { 
     if (c.b > 0) return cout << c.a << " + " << c.b << "i";
-    if (c.b == 0) return cout << c.a;
-    if (c.b < 0) return cout << c.a << " - " << c.b << "i";
+    else if (c.b == 0) return cout << c.a;
+    return cout << c.a << " - " << c.b << "i";
 }
