@@ -49,7 +49,6 @@ struct matrice {
         /* per ogni riga i seleziono l'elemento i della riga chiamato pivot. se l'elemento e' 0 allora scambio la riga con la successiva fino a che non e' 0 altrimenti
          * ignoro la colonna. Divido la riga i per il pivot. moltiplico poi tutte le righe successive j per -pivot/e_ji e le sostituisco alla somma tra loro e la riga i.*/
         for(int i = 0; i < rango_righe; ++i){
-            //double& pivot = M[i][i];
             int l = i;
             while(M[i][i] < 0.00001 && M[i][i] > -0.00001) {
                 ++l;
@@ -71,7 +70,6 @@ struct matrice {
                 else throw invalid_argument("non me mette tutti i fattori == 0 dai");
                 }
             M[i] = M[i] / M[i][i];
-            cout << "il M[i][i] e' ora uguale a = " << M[i][i] << "\n" << flush;
             for(int n = i-1; n >= 0; --n){
                 if (M[n][i] == 0) continue;
                 else M[n] =  (M[n] * (M[i][i]/M[n][i])) - M[i];
