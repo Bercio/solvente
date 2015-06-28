@@ -1,214 +1,87 @@
 % Risoluzione di sistemi di equazioni in `C++`
-%
 % Lorenzo Bercelli
+% 1 giugno 2015
 
-# Rappresentazione di matrici
+## Rappresentazione di sistemi di equazione
 
-Sapendo che per risolvere un sistema di equazioni è necessario rappresentare le 
-equazione come righe di una matrice, avente come colonne i vari coefficienti 
-delle incognite, ho inanzitutto scelto di rappresentare una matrice come un 
-vettore di vettori di numeri complessi (un tipo creato da me nell'header 
-`complessi.h`, che commento nel capitoletto [Rappresentazione di numeri 
-complessi](#rappresentazione-di-numeri-complessi)). 
+Per rappresentare un sistema di equazioni, sapendo che per risolverlo 
+computazionalmente è necessario rappresentarlo come una matrice avente come 
+colonne i coefficienti delle incognite, ho scelto un vettore di vettori di 
+numeri complessi (un tipo creato da me nell'header `complessi.h`, che commento 
+nel capitoletto [Rappresentazione di numeri 
+complessi](#rappresentazione-di-numeri-complessi)) come rappresentazione in 
+`C++` di un sistema. 
 
-Ho poi creato attorno a questa rappresentazione una classe, `matrice`, così da 
-poterla poi dotare delle funzioni membro che mi sarebbero necessitate.
-A questa classe ho poi aggiunto per comodità gli attributi `rango_righe` 
-e `rango_colonne`, il primo equivalente al numero di vettori(righe) contenuti 
-nella matrice e il secondo al numero di elementi in ognuno dei suddetti 
-vettori(righe).
+Ho poi scritto una funzione che costruisce la matrice semplificata applicando 
+il metodo risolutivo di Gauss alla matrice di partenza al momento della sua 
+inizializzazione. Sottraendo dal numero di righe della matrice iniziale il 
+numero di righe con tutti gli elementi uguali a 0 della matrice semplificata ho 
+dotato la matrice dell'attributo `rango`, un *int* rappresentante il rango 
+della matrice.
 
-```cpp
-#include <cmath>
-#include <stdexcept>
-#include <iostream>
-#include <vector>
-using namespace std;
+Utilizzando il rango ho scritto una funzione che verifica che il sistema abbia 
+soluzioni (che verifica cioè che il rango della matrice dei coefficienti non 
+cambi con l'"aggiunta" alla matrice del vettore colonna dei termini noti, come 
+ci insegna Capelli).
+Infine ho scritto una funzione che verifica che il sistema abbia un'unica 
+soluzione, che verifica cioè che il rango della matrice sia uguale al numero di 
+incognite (variabile ottenuta durante la
+[lettura di equazioni](#trasformazione-di-sistemi-di-equazioni-in-matrici)).
 
-struct matrice {
-    M = vector<vector<C>>;
-    rango_righe = M.size();
-    rango_colonne = M[0].size();
-    };
-```
+## Rappresentazione di numeri complessi
 
-## Calcolo del determinante
+Per poter risolvere sistemi di equazione in $\mathbb{C}$ ho implementato una 
+classe che rappresenta i numeri complessi e definisce alcune loro operazioni 
+necessarie alla risoluzione di sistemi di equazione. 
 
-Poichè, una volta rappresentato un sistema di equazioni come una matrice *A* 
-e i termini noti e le incognite come due vettori *b* e *x*, la soluzione del 
-sistema è data da $x = A^{-1} \cdot b$, risulta necessario creare una funzione 
-che inverta una matrice data. Per "tradurre" in C++ la formula $$A^{-1} 
-= \frac{1}{|A|} (\text{cof }A)^T$$ (dove cof *A* indica la matrice dei 
-cofattori di A) ho inanzitutto implementato la formula di Laplace per il 
-determinante: $$\det(A) = \sum_{i=1}(-1)^{i+j}a_{i,j}M_{i,j}$$ dove $M_{i,j}$ 
-indica il determinante di *A* privata della riga *i* e della colonna *j*; Per 
-implementare questa "riduzione" della matrice ho preferito creare una funzione 
-"aiutante" aggiuntiva, `ridotta`, anche in previsione della sua utilità nel 
-calcolare l'inversa.
-
-```cpp
-    matrice ridotta(int i, int j){
-        matrice n = this;
-        n.M.erase(n.M.begin() + i);
-        for(auto riga:n.M) riga.erase(riga.begin()+j);
-        return n;
-    }
-```
-
-Per calcolare il determinante di qualsiasi matrice basta dunque applicare una 
-funzione ricorsiva che riduca la matrice fino ad una matrice 1x1 e vi applichi 
-dunque le dovute moltiplicazioni e somme:
-
-```cpp
-    C det();
-```
-
-## Trasposizione della matrice
-
-Avendo la funzione per calcolare il determinante e la funzione per ridurre una 
-matrice, applicando le quali posso facilmente trovare la matrice di cofattori,
-necessito ora solamente di una funzione per calcolarne la trasposta, al fine 
-poi di trovare l'inversa.
-
-``` cpp
-    matrice T() {
-        matrice n;
-        for(int i = 0; i < rango_righe; ++i){
-            n.M.push_back(vector<C>);
-            for(auto riga:M) n.M[i].push_back(riga[i]);
-        }
-        return n;
-    }
-```
-
-## Inversa della matrice
-
-Avendo implementato dunque tutte le funzioni che mi necessitavano, Ho infine 
-scritto una funzione, `inversa`, che applicasse la formula precedentemente 
-citata $$A^{-1} = \frac{1}{|A|} (\text{cof }A)^T$$.
-
-~~~cpp
-    matrice inversa() {
-        matrice n;
-        for(int i = 0; i < rango_righe; ++i){
-            n.M.push_back(vector<C>);
-            for(int j = 0; j < rango_colonne; ++j){
-                n.M[i].push_back(pow(-1,i+j)*this->ridotta(i, j).det()/this->det());
-            }
-        }
-        return n.T();
-    }
-~~~
-
-## Moltiplicazione tra matrici
-
-Visto che $x = A^{-1}\cdot b$, per risolvere un sistema di equazioni devo poter 
-moltiplicare una matrice per un vettore, che altro non è che una matrice con 
-una sola colonna. Tanto vale dunque per amor di generalità implementare la 
-moltiplicazione tra matrici, che per rispettare la notazione convenzionale ho 
-scelto di dichiarere come overload dell'operatore `*`. 
-
-Nel caso l'utente tentasse di moltiplicare matrici aventi ranghi discordi ho 
-scelto di lanciare un'eccezione `invalid_argument`.
-
-```cpp
-    matrice operand*(matrice n){
-        if (rango_colonne != n.rango_righe || rango_righe != n.rango_colonne) 
-            throw invalid_argument("solo matrici il cui rango colonna coincide "
-                                   "col rango riga dell'altro fattore "
-                                   "e viceversa possono essere moltiplicate");
-        matrice res;
-        for(int j = 0; j < rango_righe; ++j){ 
-            res.push_back(vector<C>);
-            for(int i = 0; i < n.rango_colonne){
-                res[j].push_back(M[j][i]*n.M[i][j]);
-            }
-        }
-        return res;
-    }
-```
-
-## Rappresentazione grafica di una matrice
-
-Per mostrare all'utente il risultato, e anche per testare il programma durante 
-lo sviluppo, ho definito un overload dell'operatore `<<` che mostrasse la 
-matrice come colonne divise da spazi e righe divise da capoversi.
-
-```cpp
-ostream& operator <<(ostream& o, matrice m) {
-    for(auto riga:m.M) {
-        for(auto e:riga) cout << e << " ";
-        cout << "\n";
-    }
-    return o;
-}
-```
-
-# Rappresentazione di numeri complessi
-
-Per poter risolvere sistemi di equazione in C ho implementato una classe che 
-rappresentasse i numeri complessi e definisse alcune loro operazioni necessarie 
-alla risoluzione di sistemi di equazione. 
-
-Ho rappresentato i complessi come una coppia di double, `a` e `b`, il primo 
-rappresentate la parte reale del numero e il secondo il fattore della parte 
+Ho rappresentato i complessi come una coppia di *doubles*, `a` e `b`, il primo 
+rappresentante la parte reale del numero e il secondo il fattore della parte 
 immaginaria.
 
-~~~cpp
-#include <cmath>
-#include <stdexcept>
-#include <iostream>
-using namespace std;
-struct C {
-    // a + bi in C forall a, b in R
-    double a;
-    double b;
-};
-~~~
+### Conversione tra complessi e doubles
 
-## Conversione tra complessi e doubles
-
-Ho poi creato un costruttore che avesse come argomenti due double, il primo 
-rappresentante la parte reale e il secondo il fattore della parte immaginaria.
-Ho scelto di rendere il secondo un `default argument` uguale a 0 così da poter 
-convertire implicitamente doubles in complessi. 
+Ho dotato la classe `complessi` di un costruttore che ha come argomenti due 
+*doubles* che inizializzano la parte reale e la parte immaginaria del numero 
+complesso. Ho scelto di rendere il secondo un `default argument` uguale 
+a 0 così da poter convertire implicitamente doubles in complessi. 
 
 Ho poi aggiunto un costruttore di default, così da poter inizializzare 
-complessi senza fornire argomenti, e un overload della conversione in double, 
-così da poter implicitamente convertire complessi con parte immaginaria nulla 
-in doubles. Nel caso si tentasse di convertire numeri immaginari in doubles ho 
-scelto di lanciare un'eccezione `invalid argument`.
+complessi senza fornire argomenti, e una sovrascrittura della conversione in 
+*double*, così da poter convertire complessi con parte immaginaria nulla in 
+*doubles*. Ho reso la conversione `explicit` per evitare di incappare in errori 
+dovuti a conversioni non volute durante lo svolgimento di operazioni sui 
+complessi.
+Nel caso si tentasse di convertire numeri immaginari in doubles ho scelto di 
+sollevare un'eccezione `domain_error`.
 
-~~~cpp
-    C() = default;
-    C(double f, double i=0): a(f), b(i) {}
-    operator double(){ if(b == 0) return double(a);
-                       else throw invalid_argument(
-                       "impossibile convertire numeri complessi con parte "
-                       "immaginaria in doubles");}
-~~~
+Infine ho scritto una funzione membro `zero()` che determina se parte reale 
+e immaginaria del numero complesso siano entrambe uguali a zero entro le cifre 
+decimali fornite come secondo argomento (di default uguale alla precisione 
+scelta dall'utente attraverso l'opzione `-p`.)
+Questa funzione viene chiamata sia per evitare di scrivere zeri superflui nella 
+rappresentazione di numeri complessi (per esempio 0+5i) sia per determinare il 
+rango di una matrice. Nel secondo caso la funzione viene chiamata con 15 cifre 
+decimali di precisione (non di più per evitare *floating errors*), per evitare 
+di determinare impossibili o indefiniti sistemi con soluzioni il cui valore 
+assoluto sia minore di 1 su 10 elevato al numero di cifre decimali richiesto 
+dall'utente. Da notare che questo può portare il programma a fornire soluzioni 
+in apparenza errate: per esempio, se si richiedono al programma 
+2 cifre decimali la soluzione del sistema $\begin{cases} 1000x=1 \\ 1000y 
+  + 100x=1.1 \end{cases}$ risulterà essere $x=0.00, y=0.00$ a causa della 
+  perdita di informazioni causata dall'approssimazione.
 
-## Operazioni tra complessi
+### Operazioni tra complessi
 
-Infine ho implementato l'addizione, la sottrazione, la moltiplicazione, la 
-divisione e la (dis)eguaglianza tra numeri complessi.
-
-~~~cpp
-    C operator+(C c)  {return C(a+c.a,b+c.b);}
-    C operator-(C c)  {return C(a-c.a,b-c.b);}
-    C operator*(C c)  {return C(a*c.a-b*c.b,a*c.b+c.a*b);}
-    C operator/(C c)  {return C((a*c.a+b*c.b)/(pow(c.a,2)+pow(c.b,2)),
-                            (b*c.a - a*c.b)/(pow(c.a,2)+pow(c.b,2)));}
-    C operator==(C c) {return a == c.a && b == c.b;}
-    C operator!=(C c) {return !(this == c);}
-~~~
+Per poter applicare il metodo di risoluzione di Gauss alle matrici con numeri 
+complessi ho dunque implementato l'addizione, la sottrazione, la 
+moltiplicazione, la divisione e la (dis)eguaglianza tra numeri complessi.
 
 Per ultima ho creato una parziale funzione di potenza, che accetta come 
 esponenti solo interi. Ho reputato eccessiva, in relazione all'utilità, la 
-complessita necessaria per implementare una funzione di potenza completa. Se in 
+complessità necessaria per implementare una funzione di potenza completa. Se in 
 futuro desiderassi un'implementazione completa dei numeri complessi potrei 
-usufruire della classe `complex`, presente nella `stdlib`. Stesso discorso vale 
-per l'implementazione delle radici quadrate.
+usufruire della classe `complex`, presente nella `stdlib`. Lo stesso discorso 
+vale per l'implementazione delle radici quadrate.
 
 ~~~cpp
 C pow(C c, int e) {
@@ -219,56 +92,49 @@ C pow(C c, int e) {
 }
 ~~~
 
-## Rappresentazione grafica dei complessi
+### Lettura e scrittura di complessi
 
-Infine ho definito un overload dell'operatore `<<` per i complessi che li 
-rappresentasse nella forma $a \pm bi$.
+Infine ho definito una sovrascrittura dell'operatore `>>` che legge numeri 
+complessi nelle forme $\pm a\pm bi$, $\pm a$ e $\pm bi$ e una sovrascrittura 
+dell'operatore `<<` che li scrive nella forma $a \pm bi$, avendo cura di 
+evitare la scrittura di eventuali zeri ridondanti.
 
-~~~cpp
-ostream &operator<<(ostream &o, C c) {
-    if (c.b > 0) return cout << c.a << " + " << c.b << "i";
-    if (c.b == 0) return cout << c.a;
-    if (c.b < 0) return cout << c.a << " - " << c.b << "i";
-}
-~~~
-
-# Trasformazione di sistemi di equazioni in matrici
+## Trasformazione di sistemi di equazioni in matrici
 
 Ho scelto di implementare il risolutore di sistemi di equazione come un 
-programma per il terminale, che accetti come argomenti le equazioni da 
-risolvere e ritorni i valori delle varie incognite.
+programma per il terminale, che accetta come argomenti le equazioni da 
+risolvere e emette i valori delle varie incognite con precisione scelta 
+dall'utente attraverso l'opzione `-p` (4 cifre decimali di default).
 
-Per ottenere questo comportamento ho dovuto innanzitutto trasformare una serie 
-di equazioni nel tradizionale formato "ax+by = c" in una moltiplicazione tra 
-l'inversa della matrice dei fattori delle incognite e il vettore dei termini 
-noti.
+Per ottenere questo comportamento ho dovuto innanzitutto scrivere una funzione 
+che trasforma un'equazione lineare in un vettore di fattori di incognite -- con 
+il termine noto come ultimo elemento -- e in un insieme di incognite, in ordine
+coerente con quello dei fattori. Supportare la possibilità che la stessa 
+incognita comparisse più volte all'interno dell'equazione, che i termini 
+fossero scritti arbitrariamente a destra e sinistra del segno $=$ e che 
+i fattori delle incognite fossero numeri complessi ha richiesto un certo 
+sforzo, alleviato dalla capacità dell'`istringstream` di poter spostare avanti 
+e indietro il proprio indice di lettura in una stringa.
 
-Ho iniziato traducendo un'equazione in un vettore composto dai fattori delle 
-incognite e, all'ultimo membro, dal termine noto.
+Ho utilizzato una mappa (`map`) per registrare la somma dei vari coefficienti 
+della stessa incognita
+
 ~~~cpp
-#include <iostream>
-#include <string>
-#include <vector>
-#include "matrice.h"
-using namespace std;
-vector<C> trad_eq(string s){
-\\TODO: usa atod invece del loop;
-    string fattore;
-    vectro<C> v;
-    for(auto simbolo:s){
-        if !isalpha(simbolo) fattore += simbolo
-        else {
-            v.push_back(C(fattore));
-            fattore = "";
-        }
-    v.push_back(C(fattore));
-    }
-    return v
-}
+coefficiente[next] =  coefficiente.count(next) ?
+                      coefficiente[next] + fattore : fattore;
+~~~
+e un insieme (`set`) per evitare che la stessa incognita apparisse più di una 
+volta.
 
+È stato poi semplice in `main` processare ogni argomento fornito al programma
+e costruire coi vettori risultanti la matrice rappresentante il sistema di 
+equazioni da risolvere.
 
+## Risoluzione di sistemi di equazione
 
-trasformare Uso una map per mappare da sinistra a destra le incognite della 
-prima equazione agli indici della loro posizione della matrice che vado 
-creando. In questo modo posso accettare ordini diversi di incognite tra le 
-varie equazioni.
+Ottenuta la matrice rappresentante il sistema che si vuole risolvere 
+e l'insieme delle sue incognite verifico che abbia una e una sola soluzione (in 
+caso contrario scrivo su stdout se il sistema ha infinite o nessuna soluzione). 
+Infine scrivo su stdout le incognite seguite dai valori estrapolati dalla 
+matrice ridotta, curandomi di omettere le righe con tutti gli elementi uguali 
+a zero.
